@@ -1,0 +1,103 @@
+{
+
+"AWSTemplateFormatVersion" : "2010-09-09",
+
+"Description"              : "Cloudformation Teamplate to Provision EC2 instances",
+
+"Parameters" : {
+
+	"VpcId" : {
+      "Type" : "AWS::EC2::VPC::Id",
+      "Description" : "VpcId of your existing Virtual Private Cloud (VPC)",
+      "ConstraintDescription" : "must be the VPC Id of an existing Virtual Private Cloud."
+    },
+
+    "InstanceHostname"      : {
+            "Description" : "Instance Hostname",
+            "Type"        : "String"
+    },
+
+    "Subnets" : {
+      "Type" : "AWS::EC2::Subnet::Id",
+      "Description" : "The list of SubnetIds in your Virtual Private Cloud (VPC)",
+      "ConstraintDescription" : "must be a list of at least two existing subnets associated with at least two different availability zones. They should be residing in the selected Virtual Private Cloud."
+    },
+	
+	"SecurityGroupIds": {
+      "Description": "Security groups that can be used to access the EC2 instances",
+      "Type": "List<AWS::EC2::SecurityGroup::Id>",
+      "ConstraintDescription": "must be list of EC2 security group ids"
+    },
+
+	"InstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "t2.small",
+      "AllowedValues" : [ "t2.nano", "t2.micro", "t2.small", "t2.medium", "t2.large"],
+      "ConstraintDescription" : "must be a T2 instance type."
+    },
+	
+	"KeyName" : {
+      "Description" : "The EC2 Key Pair to allow SSH access to the instances",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    }
+    
+  },
+
+
+"Mappings": {
+        "AWSRegionAMIEC2": {
+            "ap-northeast-1": {
+                "AMZLN": "ami-ceafcba8"
+            }, 
+            "ap-southeast-1": {
+                "AMZLN": "ami-68097514"
+            }, 
+            "ap-southeast-2": {
+                "AMZLN": "ami-942dd1f6"
+            }, 
+            "eu-central-1": {
+                "AMZLN": "ami-5652ce39"
+            }, 
+            "eu-west-1": {
+                "AMZLN": "ami-d834aba1"
+            }, 
+            "us-east-1": {
+                "AMZLN": "ami-97785bed"
+            }, 
+            "us-west-1": {
+                "AMZLN": "ami-824c4ee2"
+            }, 
+            "us-west-2": {
+                "AMZLN": "ami-f2d3638a"
+            }
+        }
+    }, 
+
+
+
+"Resources" : {
+  "EC2Instance" : {
+    "Type" : "AWS::EC2::Instance",
+    "Properties" : {
+      "InstanceType" : { "Ref" : "InstanceType" },
+      "ImageId" : {
+          "Fn::FindInMap" : [
+            "AWSRegionAMIEC2",
+            {
+              "Ref" : "AWS::Region"
+            },
+            "AMZLN"
+          ]
+        },
+      "Tags" : [
+          {"Key" : "Name", "Value" : { "Ref" : "InstanceHostname"} }
+      ],
+      "SecurityGroupIds" : { "Ref" : "SecurityGroupIds" },
+      "KeyName" : { "Ref" : "KeyName" },
+	  "SubnetId" : { "Ref" : "Subnets" }
+	  }
+    }
+}
+}
